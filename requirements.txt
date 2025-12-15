@@ -1,0 +1,13 @@
+# PDF to HTML Converter Dependencies
+
+# PDF processing library with excellent text and table extraction
+pdfplumber==0.11.0
+
+# HTML parsing and generation
+beautifulsoup4==4.12.3
+
+# Pillow for image handling (dependency of pdfplumber)
+Pillow==10.3.0
+
+# Additional dependencies for pdfplumber
+pdfminer.six==20231228
