@@ -26,25 +26,21 @@ END_VAR
 (* --- Outputs: read/write to variables folder --- *)
 VAR
     IsRunning          AT %M(.variables.is running)            : BOOL;
-    RatedSlipDeviation AT %M(.variables.Rated Slip deviation)  : LREAL;  (* % deviation from rated slip *)
+    RatedSlipDeviation AT %M(.variables.Rated Slip deviation)  : LREAL;  (* slip as % of synchronous speed *)
     ALD                AT %M(.variables.ALD)                   : LREAL;  (* % deviation from expected load *)
-    Efficiency         AT %M(.variables.Efficiency)            : LREAL;
+    EfficiencyIndex    AT %M(.variables.Efficiency Index)      : LREAL;  (* relative efficiency proxy — trend only, not absolute *)
     EnergyPerPSI       AT %M(.variables.Energy per psi)        : LREAL;
     SpecificSlip       AT %M(.variables.Specific Slip)         : LREAL;  (* slip per unit load — trend for bearing/rotor health *)
-    SpecificPower      AT %M(.variables.Specific Power)        : LREAL;  (* kW per unit load — trend for efficiency loss *)
-    SpecificCurrent    AT %M(.variables.Specific Current)      : LREAL;  (* amps per unit load — trend for winding/PQ issues *)
 END_VAR
 
 (* --- Internal working variables --- *)
 VAR
     Poles            : LREAL;
     SynchronousSpeed : LREAL;
-    RatedRPM         : LREAL;
     Slip             : LREAL;
-    RatedSlip        : LREAL;
     ExpectedTorque   : LREAL;
     SpeedRatio       : LREAL;
-    LoadFraction     : LREAL;   (* Torque / 100.0 — unitless load fraction *)
+    LoadFraction     : LREAL;
 END_VAR
 
 (* --- Library reference: STAFF WORK.Bryan's Folder.Logic.round2decimels --- *)
@@ -68,18 +64,14 @@ IF IsRunning AND (NameplateRPM > 0.0) THEN
 
     IF Poles > 0.0 THEN
 
-        (* --- Speed calculations --- *)
+        (* --- Speed & slip calculations --- *)
         R2(VarIn := 120.0 * Frequency / Poles, OUT1 => SynchronousSpeed);
-        R2(VarIn := 7200.0 / Poles, OUT1 => RatedRPM);
-
-        (* --- Slip calculations --- *)
         R2(VarIn := SynchronousSpeed - RPM, OUT1 => Slip);
-        R2(VarIn := RatedRPM - NameplateRPM, OUT1 => RatedSlip);
 
-        (* --- Normalized slip deviation (%) --- *)
-        (* (actual slip - rated slip) / rated slip * 100 *)
-        IF RatedSlip > 0.0 THEN
-            R2(VarIn := ((Slip - RatedSlip) / RatedSlip) * 100.0, OUT1 => RatedSlipDeviation);
+        (* --- Normalized slip (% of synchronous speed) --- *)
+        (* Stable denominator, comparable across motor sizes *)
+        IF SynchronousSpeed > 0.0 THEN
+            R2(VarIn := (Slip / SynchronousSpeed) * 100.0, OUT1 => RatedSlipDeviation);
         END_IF;
 
         (* --- Torque & normalized load analysis --- *)
@@ -91,9 +83,13 @@ IF IsRunning AND (NameplateRPM > 0.0) THEN
             R2(VarIn := ((Torque - ExpectedTorque) / ExpectedTorque) * 100.0, OUT1 => ALD);
         END_IF;
 
-        (* --- Efficiency (approximation — torque is in % of rated, not Nm) --- *)
-        IF (Current > 0.0) AND (PowerKW > 0.0) THEN
-            R2(VarIn := (PowerKW / Current) * Torque, OUT1 => Efficiency);
+        (* --- Efficiency Index (relative proxy, not absolute efficiency) --- *)
+        (* Torque% * RPM is proportional to mechanical output.              *)
+        (* Dividing by electrical input (PowerKW) gives a value proportional *)
+        (* to true efficiency. Absolute value is meaningless — trend it.     *)
+        (* A dropping trend at similar load = motor losing efficiency.       *)
+        IF PowerKW > 0.0 THEN
+            R2(VarIn := (Torque * RPM) / (PowerKW * NameplateRPM) * 100.0, OUT1 => EfficiencyIndex);
         END_IF;
 
         (* --- Energy intensity --- *)
@@ -101,13 +97,11 @@ IF IsRunning AND (NameplateRPM > 0.0) THEN
             R2(VarIn := PowerKW / Pressure, OUT1 => EnergyPerPSI);
         END_IF;
 
-        (* --- Load-normalized health trending metrics --- *)
+        (* --- Load-normalized health trending --- *)
         (* Only computed above 20% load to avoid noise at light loads *)
         IF Torque > 20.0 THEN
             LoadFraction := Torque / 100.0;
-            R2(VarIn := Slip / LoadFraction,    OUT1 => SpecificSlip);
-            R2(VarIn := PowerKW / LoadFraction,  OUT1 => SpecificPower);
-            R2(VarIn := Current / LoadFraction,  OUT1 => SpecificCurrent);
+            R2(VarIn := Slip / LoadFraction, OUT1 => SpecificSlip);
         END_IF;
 
     END_IF;  (* Poles > 0 *)
