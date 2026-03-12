@@ -1,0 +1,109 @@
+# ST Program Structure Reference
+
+Before you begin to create your own ST programs, you need to be aware of the basic structure of an ST program.
+
+## 1. The Start of the Program
+
+ST programs begin with a `PROGRAM` keyword and a program name. This is followed by a `VAR` keyword and a list of variables.
+
+## 2. The Variable Blocks
+
+There are 2 types of VAR block—VAR blocks for internal variables and VAR blocks for direct and indirect variables. Variables of different types have to be defined in separate blocks.
+
+### Internal Variables
+
+For internal variables, the VAR block will begin with a `VAR` keyword. The variables are defined after the VAR keyword and use the format:
+
+```
+<name> : <type>;
+```
+
+### Direct and Indirect Variables
+
+For direct and indirect variables, the VAR block will also begin with a `VAR` keyword. The variables are defined after the VAR keyword and use this format:
+
+```
+<name> <instruction> (<item>.<variable>) : <variable type>;
+```
+
+For example:
+
+```
+VAR
+  Desc AT %I(.Valve.Position.CurrentStateDesc) : STRING;
+END_VAR
+```
+
+Each VAR block is ended by an `END_VAR` keyword.
+
+### Rules for Using Variables
+
+1. Define the type for any arguments.
+2. Separate each argument type with a comma. For example, `STRING, BYTE, STRING;` means there are 3 arguments: the first is a string, the second is a byte, and the final argument is a string.
+3. Use `VAR INPUT` definitions to allow the ST program to receive inputs from a user/another ST program. The `VAR INPUT` keyword needs to be included in the recipient program (so, if one ST program receives the inputs for its indirect variables from another program, the program that receives the inputs has to have `VAR INPUTS`).
+4. Define the `VAR INPUTS` in the same order in which they are to be executed. To allow a program to use the values from another program, the arguments for the indirect variables' inputs have to be in the same order in both programs. For example, Program 1 defines a method that has outputs in this order: `STRING, BYTE`. These values are output to Program 2. In Program 2, the `VAR INPUT` definition has to define that the first argument is a `STRING` and the second argument is a `BYTE` as this is the order defined in Program 1.
+5. Set the Interval to `0s` on the ST Program Form for the recipient ST program. Programs that use manually entered input values or input values from other programs cannot be executed on an interval basis. However, they can be executed by another program (the other program executes the recipient ST program at a regular interval), according to a schedule, and manually. If required, configure a schedule to execute the program at specific times (see *Using Schedules to Automate Regular Functions* in the ClearSCADA Guide to Core Configuration). If you execute a recipient ST program manually, you will be prompted to enter the input value. You need to enter the input value in the dialog box and select the OK button to proceed. You will only be prompted to enter a value if the recipient program has inputs defined, but the inputs are not associated with other programs.
+
+## 3. The Method Block
+
+If an ST program uses methods, the methods are defined in a `METHOD` block. The METHOD block has to follow the VAR block(s) and also come before the ST code for the program. If the ST program does not use methods, there is no METHOD block and the ST code for the program follows the last VAR block.
+
+The METHOD block begins with a `METHOD` keyword. The methods that the program uses are listed and use this format:
+
+```
+<name> <instruction> (<item>.<method>) : <argument types>;
+```
+
+For example:
+
+```
+METHOD
+  OVR AT %M(AIs.AnalogInp.Override) : LREAL;
+END_METHOD
+```
+
+The METHOD block is ended by an `END_METHOD` keyword.
+
+## 4. The ST Code
+
+The ST code for the program follows the METHOD block (or the last VAR block if there is no METHOD block). This can include statements, expressions, and operators.
+
+## 5. The End of the Program
+
+Each ST program is ended with the `END_PROGRAM` keyword.
+
+## Full Example
+
+In the following basic example, the ST program contains 3 variables and 3 methods. ST programs can contain as many variables and methods as required.
+
+Entries in angle brackets `< >` indicate a name or type that you have to enter for the program. These will vary depending on the items you want to reference and the names you want to use. You should not enter the angle brackets in your ST programs.
+
+```
+PROGRAM <program name>
+
+VAR
+  <name> : <type>;
+  <name> : <type>;
+  <name> : <type>;
+END_VAR
+
+METHOD
+  <name> AT %M(<location and name of item>.<method>) : <argument types>;
+  <name> AT %M(<location and name of item>.<method>) : <argument types>;
+  <name> AT %M(<location and name of item>.<method>) : <argument types>;
+END_METHOD
+
+<ST code>;
+<ST code>;
+<ST code>;
+
+END_PROGRAM
+```
+
+### Structure Summary
+
+1. `PROGRAM` definition and program name
+2. `VAR` block(s) — variable names and types, ended by `END_VAR`
+3. `METHOD` block (optional) — method definitions, ended by `END_METHOD`
+4. ST code — the program logic (statements, expressions, operators)
+5. `END_PROGRAM` — closes the program
