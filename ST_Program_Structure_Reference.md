@@ -89,7 +89,63 @@ Where `TempConversion` is the name of the internal variable and `INT` is the typ
 
 Direct variables are values that are read from (or written to) items in the ClearSCADA database. You reference direct variables to allow programs to react to and apply changes to database values.
 
-The most common way to access direct variables is through the **VAR list** (see above). However, alternative access methods are more effective in certain situations:
+#### Using the VAR List to Access Direct Variables
+
+Direct variables are defined in a VAR list after the `PROGRAM` keyword using this syntax:
+
+```
+VAR
+  <Name of variable> AT <AccessType>(<path.to.item.field>) : <Type of variable>;
+END_VAR
+```
+
+Example:
+
+```
+VAR
+  Input AT %I(..TemperatureSensor.CurrentValueFormatted) : STRING;
+END_VAR;
+```
+
+In this example, the variable is read-only (`%I`), read from the `CurrentValueFormatted` tag of the `TemperatureSensor` item. The two periods (`..`) indicate a relative reference in the hierarchy.
+
+#### Access Types
+
+| Characters | Access Type |
+|------------|------------|
+| `%I` | Read Only |
+| `%Q` | Write Only |
+| `%M` | Read and Write |
+
+#### Specifying Fields
+
+When referencing a database item, you can specify a field or let the program use the default field (e.g., `CurrentValue` for points). To specify a field, add the field name to the end of the item's path with a period separator:
+
+```
+Desc AT %I(.Valve.Position.CurrentStateDesc) : STRING;
+```
+
+This references the `CurrentStateDesc` field as a read-only string value.
+
+**Direct variables must be separated from internal variables, constants, and function blocks in the VAR lists.**
+
+#### Example: Reading a Point Value and Writing it to Another Point
+
+```
+PROGRAM ReadTempWriteTemp
+VAR
+  Input AT %I(TemperatureSensor1.CurrentValue) : REAL;
+  Output AT %M(TemperatureSensor2.CurrentValue) : REAL;
+END_VAR;
+Output := Input;
+END_PROGRAM
+```
+
+`%I` reads a value from the database and `%M` is used to write a value to the database (`%M` can both read and write).
+
+#### Alternative Access Methods
+
+The VAR list is the most common way to access direct variables. However, alternatives are more effective in certain situations:
 
 - **`VAR NOCACHE`** — Use when your program must not use cached values. Required when values accumulate with each execution of the program.
 - **Database Object Structures** — Use when your program references the same properties for a large number of database items of the same type. Reduces time and effort to create references.
