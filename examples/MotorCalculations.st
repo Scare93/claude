@@ -30,7 +30,7 @@ END_VAR
 
 (* --- Internal working variables --- *)
 VAR
-    UseAFI           : BOOL;    (* Alternate efficiency formula flag *)
+    AFI              : BOOL;    (* Always False Input — efficiency branch is never taken *)
     Poles            : LREAL;
     SynchronousSpeed : LREAL;
     RatedRPM         : LREAL;
@@ -88,7 +88,7 @@ IF IsRunning THEN
 
     (* --- Efficiency --- *)
 
-    IF UseAFI AND (PowerKW < 100.0) THEN
+    IF AFI AND (PowerKW < 100.0) THEN
         (* AFI method: mechanical power out / electrical power in *)
         R2(VarIn := (Torque * RPM) / (PowerKW * 100.0), OUT1 => Efficiency);
     ELSE
