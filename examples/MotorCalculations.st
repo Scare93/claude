@@ -57,6 +57,12 @@ IF IsRunning THEN
     (* Pole count: nearest even integer from nameplate speed *)
     Poles := DINT_TO_LREAL(TRUNC(7200.0 / NameplateRPM + 0.5));
 
+    (* Round frequency for cleaner downstream values *)
+    R2(VarIn := Frequency, OUT1 => Frequency);
+
+    (* Round power for cleaner downstream values *)
+    R2(VarIn := PowerKW, OUT1 => PowerKW);
+
     (* Synchronous speed = (120 x line frequency) / poles *)
     R2(VarIn := 120.0 * Frequency / Poles, OUT1 => SynchronousSpeed);
 
@@ -74,7 +80,7 @@ IF IsRunning THEN
     (* --- Torque & load analysis --- *)
 
     (* Expected torque for centrifugal loads follows the affinity law: T proportional to speed squared *)
-    SpeedRatio := RPM / NameplateRPM;
+    R2(VarIn := RPM / NameplateRPM, OUT1 => SpeedRatio);
     R2(VarIn := EXPT(SpeedRatio, 2) * 100.0, OUT1 => ExpectedTorque);
 
     (* Actual Load Deviation: positive = overloaded, negative = underloaded *)
