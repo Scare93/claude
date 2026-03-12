@@ -1,28 +1,32 @@
 PROGRAM MotorCalculations
+(* Inputs - read from top-level template points *)
 VAR
-    (* Inputs *)
-    PowerkW         : LREAL;
-    Nameplaterpm    : LREAL;
-    Frequency       : LREAL;
-    RPM             : LREAL;
-    Torque          : LREAL;
-    Current         : LREAL;
-    Pressure        : LREAL;
-    AFI             : BOOL;
-    (* Outputs *)
-    isrunning           : BOOL;
-    Poles               : LREAL;
-    Synchronousspeed    : LREAL;
-    RatedRPM            : LREAL;
-    Slip                : LREAL;
-    RatedSlip           : LREAL;
-    RatedSlipdeviation  : LREAL;
-    ExpectedTorque      : LREAL;
-    ALD                 : LREAL;
-    Efficiency          : LREAL;
-    Energyperpsi        : LREAL;
-    (* Internal *)
-    temp                : LREAL;
+    PowerkW AT %I(..PowerkW) : LREAL;
+    Nameplaterpm AT %I(..Nameplate rpm) : LREAL;
+    Frequency AT %I(..Frequency) : LREAL;
+    RPM AT %I(..RPM) : LREAL;
+    Torque AT %I(..Torque) : LREAL;
+    Current AT %I(..Current) : LREAL;
+    Pressure AT %I(..Pressure) : LREAL;
+END_VAR
+(* Outputs - write to variables folder *)
+VAR
+    isrunning AT %Q(..variables.is running) : BOOL;
+    RatedSlipdeviation AT %Q(..variables.Rated Slip deviation) : LREAL;
+    ALD AT %Q(..variables.ALD) : LREAL;
+    Efficiency AT %Q(..variables.Efficiency) : LREAL;
+    Energyperpsi AT %Q(..variables.Energy per psi) : LREAL;
+END_VAR
+(* Internal variables *)
+VAR
+    AFI : BOOL;
+    Poles : LREAL;
+    Synchronousspeed : LREAL;
+    RatedRPM : LREAL;
+    Slip : LREAL;
+    RatedSlip : LREAL;
+    ExpectedTorque : LREAL;
+    temp : LREAL;
 END_VAR
 (* Step 1: Running check *)
 isrunning := PowerkW > 10;
