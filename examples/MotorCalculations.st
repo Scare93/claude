@@ -4,7 +4,7 @@
    Computes motor health and performance metrics from real-time sensor data.
    Assumes a centrifugal (variable-torque) load — torque proportional to speed squared.
 
-   Requires: Round2 ST Library (enable via Logic > Libraries in Design mode)
+   Requires: STAFF WORK.Bryan's Folder.Logic.round2decimels (enable via Logic > Libraries)
    ============================================================================ *)
 PROGRAM MotorCalculations
 
@@ -40,9 +40,9 @@ VAR
     SpeedRatio       : LREAL;
 END_VAR
 
-(* --- Library reference: Round2 ST Library --- *)
+(* --- Library reference: STAFF WORK.Bryan's Folder.Logic.round2decimels --- *)
 VAR
-    R2 : Round2;
+    R2 : round2decimels;
 END_VAR
 
 (* ---- Main logic ---- *)
