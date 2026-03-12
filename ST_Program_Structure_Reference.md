@@ -85,6 +85,20 @@ END_VAR
 
 Where `TempConversion` is the name of the internal variable and `INT` is the type of value that it represents (an integer).
 
+### Direct Variables
+
+Direct variables are values that are read from (or written to) items in the ClearSCADA database. You reference direct variables to allow programs to react to and apply changes to database values.
+
+The most common way to access direct variables is through the **VAR list** (see above). However, alternative access methods are more effective in certain situations:
+
+- **`VAR NOCACHE`** — Use when your program must not use cached values. Required when values accumulate with each execution of the program.
+- **Database Object Structures** — Use when your program references the same properties for a large number of database items of the same type. Reduces time and effort to create references.
+- **SQL Queries** — Use when your program needs to access multiple database items that meet certain criteria but are not named explicitly in the program. SQL queries can be included within the ST program.
+- **Vectors** — Use when your program needs to read/write values from/to an array.
+- **Historic Values** — Use when you need to access historic values.
+
+**Important: Parentheses in database item names** — If a database item's name includes parentheses `( )`, each opening parenthesis must be paired with a closing parenthesis. Unpaired parentheses (e.g., `"Analog Point (4"` or `"Analog Point (4))"`) will cause compile errors. Multiple sets of parentheses compile successfully, including nested (e.g., `"Analog Point (4)"` or `"Analog Point (4(x))"`).
+
 ### Rules for Using Variables
 
 1. Define the type for any arguments.
