@@ -59,6 +59,32 @@ END_IF;
 
 In this example, `TimeCount` is an internal variable (no `AT` binding) and `TimedStart` is a direct variable (with `AT %M` binding), so they must be in separate VAR blocks.
 
+### Using the RETAIN Keyword
+
+Normally, internal variables are not stored for use after the program or server has been reset. Similarly, they are not transferred to any standby servers.
+
+However, you can use the `VAR RETAIN` keyword to store internal values so that:
+- They are **not reset** to their initial values when the server or program is reset
+- They are **transferred** to any standby servers
+
+Format:
+
+```
+VAR RETAIN
+  <name> : <type>;
+END_VAR
+```
+
+Example:
+
+```
+VAR RETAIN
+  TempConversion : INT;
+END_VAR
+```
+
+Where `TempConversion` is the name of the internal variable and `INT` is the type of value that it represents (an integer).
+
 ### Rules for Using Variables
 
 1. Define the type for any arguments.
