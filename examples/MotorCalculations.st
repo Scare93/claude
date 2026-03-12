@@ -2,10 +2,9 @@
    MotorCalculations
 
    Computes motor health and performance metrics from real-time sensor data.
-   Assumes a centrifugal (variable-torque) load — torque proportional to speed².
+   Assumes a centrifugal (variable-torque) load — torque proportional to speed squared.
 
-   Rounding pattern used throughout:
-   DINT_TO_LREAL(TRUNC(x * 100.0 + 0.5)) / 100.0  rounds x to 2 decimals.
+   Requires: MotorUtils ST Library (provides Round2 function block)
    ============================================================================ *)
 PROGRAM MotorCalculations
 
@@ -39,6 +38,7 @@ VAR
     RatedSlip        : LREAL;
     ExpectedTorque   : LREAL;
     SpeedRatio       : LREAL;
+    R2               : Round2;  (* Rounding function block instance *)
 END_VAR
 
 (* ---- Main logic ---- *)
@@ -54,42 +54,52 @@ IF IsRunning THEN
     Poles := DINT_TO_LREAL(TRUNC(7200.0 / NameplateRPM + 0.5));
 
     (* Synchronous speed = (120 x line frequency) / poles *)
-    SynchronousSpeed := DINT_TO_LREAL(TRUNC((120.0 * Frequency / Poles) * 100.0 + 0.5)) / 100.0;
+    R2(Value := 120.0 * Frequency / Poles);
+    SynchronousSpeed := R2.Result;
 
     (* Rated RPM at nominal 60 Hz *)
-    RatedRPM := DINT_TO_LREAL(TRUNC((7200.0 / Poles) * 100.0 + 0.5)) / 100.0;
+    R2(Value := 7200.0 / Poles);
+    RatedRPM := R2.Result;
 
     (* --- Slip calculations --- *)
 
-    Slip      := DINT_TO_LREAL(TRUNC((SynchronousSpeed - RPM) * 100.0 + 0.5)) / 100.0;
-    RatedSlip := DINT_TO_LREAL(TRUNC((RatedRPM - NameplateRPM) * 100.0 + 0.5)) / 100.0;
+    R2(Value := SynchronousSpeed - RPM);
+    Slip := R2.Result;
+
+    R2(Value := RatedRPM - NameplateRPM);
+    RatedSlip := R2.Result;
 
     (* How far actual slip deviates from rated slip — indicates mechanical load changes *)
-    RatedSlipDeviation := DINT_TO_LREAL(TRUNC((Slip - RatedSlip) * 100.0 + 0.5)) / 100.0;
+    R2(Value := Slip - RatedSlip);
+    RatedSlipDeviation := R2.Result;
 
     (* --- Torque & load analysis --- *)
 
     (* Expected torque for centrifugal loads follows the affinity law: T proportional to speed squared *)
-    SpeedRatio     := RPM / NameplateRPM;
-    ExpectedTorque := DINT_TO_LREAL(TRUNC((EXPT(SpeedRatio, 2) * 100.0) * 100.0 + 0.5)) / 100.0;
+    SpeedRatio := RPM / NameplateRPM;
+    R2(Value := EXPT(SpeedRatio, 2) * 100.0);
+    ExpectedTorque := R2.Result;
 
     (* Actual Load Deviation: positive = overloaded, negative = underloaded *)
-    ALD := DINT_TO_LREAL(TRUNC((Torque - ExpectedTorque) * 100.0 + 0.5)) / 100.0;
+    R2(Value := Torque - ExpectedTorque);
+    ALD := R2.Result;
 
     (* --- Efficiency --- *)
 
     IF UseAFI AND (PowerKW < 100.0) THEN
         (* AFI method: mechanical power out / electrical power in *)
-        Efficiency := DINT_TO_LREAL(TRUNC(((Torque * RPM) / (PowerKW * 100.0)) * 100.0 + 0.5)) / 100.0;
+        R2(Value := (Torque * RPM) / (PowerKW * 100.0));
     ELSE
         (* Default method *)
-        Efficiency := DINT_TO_LREAL(TRUNC(((PowerKW / Current) * Torque) * 100.0 + 0.5)) / 100.0;
+        R2(Value := (PowerKW / Current) * Torque);
     END_IF;
+    Efficiency := R2.Result;
 
     (* --- Energy intensity --- *)
 
     IF Pressure > 0.0 THEN
-        EnergyPerPSI := DINT_TO_LREAL(TRUNC((PowerKW / Pressure) * 100.0 + 0.5)) / 100.0;
+        R2(Value := PowerKW / Pressure);
+        EnergyPerPSI := R2.Result;
     END_IF;
 
 END_IF;
