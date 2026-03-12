@@ -11,11 +11,11 @@ VAR
 END_VAR
 (* Outputs - read/write to variables folder *)
 VAR
-    isrunning AT %M(..variables.is running) : BOOL;
-    RatedSlipdeviation AT %M(..variables.Rated Slip deviation) : LREAL;
-    ALD AT %M(..variables.ALD) : LREAL;
-    Efficiency AT %M(..variables.Efficiency) : LREAL;
-    Energyperpsi AT %M(..variables.Energy per psi) : LREAL;
+    isrunning AT %M(.variables.is running) : BOOL;
+    RatedSlipdeviation AT %M(.variables.Rated Slip deviation) : LREAL;
+    ALD AT %M(.variables.ALD) : LREAL;
+    Efficiency AT %M(.variables.Efficiency) : LREAL;
+    Energyperpsi AT %M(.variables.Energy per psi) : LREAL;
 END_VAR
 (* Internal variables *)
 VAR
