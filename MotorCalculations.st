@@ -52,22 +52,14 @@ IF IsRunning THEN
     (* --- Slip calculations --- *)
     R2(VarIn := SynchronousSpeed - RPM, OUT1 => Slip);
     R2(VarIn := RatedRPM - NameplateRPM, OUT1 => RatedSlip);
-    (* Normalized slip deviation: (actual - expected) / expected *)
-    IF RatedSlip <> 0.0 THEN
-        R2(VarIn := (Slip - RatedSlip) / RatedSlip, OUT1 => RatedSlipDeviation);
-    ELSE
-        RatedSlipDeviation := 0.0;
-    END_IF;
+    (* How far actual slip deviates from rated slip — indicates mechanical load changes *)
+    R2(VarIn := Slip - RatedSlip, OUT1 => RatedSlipDeviation);
     (* --- Torque & load analysis --- *)
     (* Expected torque for centrifugal loads follows the affinity law: T proportional to speed squared *)
     SpeedRatio := RPM / NameplateRPM;
     R2(VarIn := EXPT(SpeedRatio, 2) * 100.0, OUT1 => ExpectedTorque);
-    (* Normalized Actual Load Deviation: (actual - expected) / expected *)
-    IF ExpectedTorque <> 0.0 THEN
-        R2(VarIn := (Torque - ExpectedTorque) / ExpectedTorque, OUT1 => ALD);
-    ELSE
-        ALD := 0.0;
-    END_IF;
+    (* Actual Load Deviation: positive = overloaded, negative = underloaded *)
+    R2(VarIn := Torque - ExpectedTorque, OUT1 => ALD);
     (* --- Efficiency --- *)
     IF AFI AND (PowerKW < 100.0) THEN
         (* AFI method: mechanical power out / electrical power in *)
