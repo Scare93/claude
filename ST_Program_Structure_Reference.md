@@ -36,6 +36,29 @@ END_VAR
 
 Each VAR block is ended by an `END_VAR` keyword.
 
+### Important: Separating Internal and Direct/Indirect Variables
+
+**Internal variables and direct/indirect variables cannot be listed in the same VAR block.** You must create separate VAR lists for each type. The `END_VAR` keyword only has a semicolon at the end of the **final** VAR list.
+
+Example:
+
+```
+VAR
+  TimeCount : TIME;
+END_VAR
+VAR
+  TimedStart AT %M(.Power.StartMotor.CurrentState) : BOOL;
+END_VAR
+
+IF TimeCount > T#60s THEN
+  TimedStart := TRUE;
+ELSE
+  TimedStart := FALSE;
+END_IF;
+```
+
+In this example, `TimeCount` is an internal variable (no `AT` binding) and `TimedStart` is a direct variable (with `AT %M` binding), so they must be in separate VAR blocks.
+
 ### Rules for Using Variables
 
 1. Define the type for any arguments.
