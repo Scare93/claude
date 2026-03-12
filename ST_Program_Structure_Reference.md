@@ -148,12 +148,53 @@ END_PROGRAM
 The VAR list is the most common way to access direct variables. However, alternatives are more effective in certain situations:
 
 - **`VAR NOCACHE`** — Use when your program must not use cached values. Required when values accumulate with each execution of the program.
-- **Database Object Structures** — Use when your program references the same properties for a large number of database items of the same type. Reduces time and effort to create references.
+- **Database Object Structures** — Use when your program references the same properties for a large number of database items of the same type. Reduces time and effort to create references. See [Database Object Structures](#database-object-structures) below.
 - **SQL Queries** — Use when your program needs to access multiple database items that meet certain criteria but are not named explicitly in the program. SQL queries can be included within the ST program.
 - **Vectors** — Use when your program needs to read/write values from/to an array.
 - **Historic Values** — Use when you need to access historic values.
 
 **Important: Parentheses in database item names** — If a database item's name includes parentheses `( )`, each opening parenthesis must be paired with a closing parenthesis. Unpaired parentheses (e.g., `"Analog Point (4"` or `"Analog Point (4))"`) will cause compile errors. Multiple sets of parentheses compile successfully, including nested (e.g., `"Analog Point (4)"` or `"Analog Point (4(x))"`).
+
+#### Database Object Structures
+
+When a program needs to reference the same set of properties for many items of the same type, declaring each field for each item is time-consuming. Database Object Structures let you group fields for a class of items into a reusable structure.
+
+**Definition** — The `TYPE` definition must be placed **at the top of the ST program, above the `PROGRAM` keyword**:
+
+```
+TYPE
+  PointValues : DATABASE_OBJECT(CDBPOINT)
+    CurrentValueFormatted : STRING;
+    CurrentState : BYTE;
+    CurrentStateDesc : STRING;
+  END_DATABASE_OBJECT;
+END_TYPE
+```
+
+**Usage in VAR list** — Reference the structure name instead of individual fields:
+
+```
+VAR
+  InputVal AT %I(Group 1.LimitPoint) : PointValues;
+END_VAR
+VAR
+  PointFields : STRING;
+END_VAR
+PointFields := InputVal.CurrentValueFormatted;
+```
+
+Where `InputVal` is the variable name, `%I` indicates read-only, `(Group 1.LimitPoint)` is the item path, and `PointValues` is the structure name. Access individual fields with dot notation (e.g., `InputVal.CurrentValueFormatted`).
+
+**Rules:**
+
+1. The structure must be inside a `TYPE` / `END_TYPE` definition
+2. `TYPE` must be positioned **above** the `PROGRAM` keyword
+3. The structure name is followed by `DATABASE_OBJECT(<class name>)` where `<class name>` is the ClearSCADA database class (e.g., `CDBPOINT`)
+4. Field names must match the database field names exactly, each followed by its data type
+5. When using with SQL Queries, include the `Id` column as the first column (DATABASE_OBJECT structures have an implicit `Id` field)
+6. End with `END_DATABASE_OBJECT;` then `END_TYPE`
+7. The `PROGRAM` block follows after `END_TYPE`
+8. You **cannot** access database aggregates via DATABASE_OBJECT structures — use standard read/write declarations instead
 
 ### Rules for Using Variables
 
