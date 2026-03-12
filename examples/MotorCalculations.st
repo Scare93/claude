@@ -4,7 +4,7 @@
    Computes motor health and performance metrics from real-time sensor data.
    Assumes a centrifugal (variable-torque) load — torque proportional to speed squared.
 
-   Requires: MotorUtils ST Library (provides Round2 function block)
+   Requires: Round2 ST Library (enable via Logic > Libraries in Design mode)
    ============================================================================ *)
 PROGRAM MotorCalculations
 
@@ -38,7 +38,11 @@ VAR
     RatedSlip        : LREAL;
     ExpectedTorque   : LREAL;
     SpeedRatio       : LREAL;
-    R2               : Round2;  (* Rounding function block instance *)
+END_VAR
+
+(* --- Library reference: Round2 ST Library --- *)
+VAR
+    R2 : Round2;
 END_VAR
 
 (* ---- Main logic ---- *)
@@ -54,52 +58,42 @@ IF IsRunning THEN
     Poles := DINT_TO_LREAL(TRUNC(7200.0 / NameplateRPM + 0.5));
 
     (* Synchronous speed = (120 x line frequency) / poles *)
-    R2(Value := 120.0 * Frequency / Poles);
-    SynchronousSpeed := R2.Result;
+    R2(Value := 120.0 * Frequency / Poles, Result => SynchronousSpeed);
 
     (* Rated RPM at nominal 60 Hz *)
-    R2(Value := 7200.0 / Poles);
-    RatedRPM := R2.Result;
+    R2(Value := 7200.0 / Poles, Result => RatedRPM);
 
     (* --- Slip calculations --- *)
 
-    R2(Value := SynchronousSpeed - RPM);
-    Slip := R2.Result;
-
-    R2(Value := RatedRPM - NameplateRPM);
-    RatedSlip := R2.Result;
+    R2(Value := SynchronousSpeed - RPM, Result => Slip);
+    R2(Value := RatedRPM - NameplateRPM, Result => RatedSlip);
 
     (* How far actual slip deviates from rated slip — indicates mechanical load changes *)
-    R2(Value := Slip - RatedSlip);
-    RatedSlipDeviation := R2.Result;
+    R2(Value := Slip - RatedSlip, Result => RatedSlipDeviation);
 
     (* --- Torque & load analysis --- *)
 
     (* Expected torque for centrifugal loads follows the affinity law: T proportional to speed squared *)
     SpeedRatio := RPM / NameplateRPM;
-    R2(Value := EXPT(SpeedRatio, 2) * 100.0);
-    ExpectedTorque := R2.Result;
+    R2(Value := EXPT(SpeedRatio, 2) * 100.0, Result => ExpectedTorque);
 
     (* Actual Load Deviation: positive = overloaded, negative = underloaded *)
-    R2(Value := Torque - ExpectedTorque);
-    ALD := R2.Result;
+    R2(Value := Torque - ExpectedTorque, Result => ALD);
 
     (* --- Efficiency --- *)
 
     IF UseAFI AND (PowerKW < 100.0) THEN
         (* AFI method: mechanical power out / electrical power in *)
-        R2(Value := (Torque * RPM) / (PowerKW * 100.0));
+        R2(Value := (Torque * RPM) / (PowerKW * 100.0), Result => Efficiency);
     ELSE
         (* Default method *)
-        R2(Value := (PowerKW / Current) * Torque);
+        R2(Value := (PowerKW / Current) * Torque, Result => Efficiency);
     END_IF;
-    Efficiency := R2.Result;
 
     (* --- Energy intensity --- *)
 
     IF Pressure > 0.0 THEN
-        R2(Value := PowerKW / Pressure);
-        EnergyPerPSI := R2.Result;
+        R2(Value := PowerKW / Pressure, Result => EnergyPerPSI);
     END_IF;
 
 END_IF;
