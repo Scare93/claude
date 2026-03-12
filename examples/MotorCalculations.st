@@ -58,42 +58,42 @@ IF IsRunning THEN
     Poles := DINT_TO_LREAL(TRUNC(7200.0 / NameplateRPM + 0.5));
 
     (* Synchronous speed = (120 x line frequency) / poles *)
-    R2(Value := 120.0 * Frequency / Poles, Result => SynchronousSpeed);
+    R2(VarIn := 120.0 * Frequency / Poles, OUT1 => SynchronousSpeed);
 
     (* Rated RPM at nominal 60 Hz *)
-    R2(Value := 7200.0 / Poles, Result => RatedRPM);
+    R2(VarIn := 7200.0 / Poles, OUT1 => RatedRPM);
 
     (* --- Slip calculations --- *)
 
-    R2(Value := SynchronousSpeed - RPM, Result => Slip);
-    R2(Value := RatedRPM - NameplateRPM, Result => RatedSlip);
+    R2(VarIn := SynchronousSpeed - RPM, OUT1 => Slip);
+    R2(VarIn := RatedRPM - NameplateRPM, OUT1 => RatedSlip);
 
     (* How far actual slip deviates from rated slip — indicates mechanical load changes *)
-    R2(Value := Slip - RatedSlip, Result => RatedSlipDeviation);
+    R2(VarIn := Slip - RatedSlip, OUT1 => RatedSlipDeviation);
 
     (* --- Torque & load analysis --- *)
 
     (* Expected torque for centrifugal loads follows the affinity law: T proportional to speed squared *)
     SpeedRatio := RPM / NameplateRPM;
-    R2(Value := EXPT(SpeedRatio, 2) * 100.0, Result => ExpectedTorque);
+    R2(VarIn := EXPT(SpeedRatio, 2) * 100.0, OUT1 => ExpectedTorque);
 
     (* Actual Load Deviation: positive = overloaded, negative = underloaded *)
-    R2(Value := Torque - ExpectedTorque, Result => ALD);
+    R2(VarIn := Torque - ExpectedTorque, OUT1 => ALD);
 
     (* --- Efficiency --- *)
 
     IF UseAFI AND (PowerKW < 100.0) THEN
         (* AFI method: mechanical power out / electrical power in *)
-        R2(Value := (Torque * RPM) / (PowerKW * 100.0), Result => Efficiency);
+        R2(VarIn := (Torque * RPM) / (PowerKW * 100.0), OUT1 => Efficiency);
     ELSE
         (* Default method *)
-        R2(Value := (PowerKW / Current) * Torque, Result => Efficiency);
+        R2(VarIn := (PowerKW / Current) * Torque, OUT1 => Efficiency);
     END_IF;
 
     (* --- Energy intensity --- *)
 
     IF Pressure > 0.0 THEN
-        R2(Value := PowerKW / Pressure, Result => EnergyPerPSI);
+        R2(VarIn := PowerKW / Pressure, OUT1 => EnergyPerPSI);
     END_IF;
 
 END_IF;
