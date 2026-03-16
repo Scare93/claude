@@ -11,3 +11,6 @@ Pillow==10.3.0
 
 # Additional dependencies for pdfplumber
 pdfminer.six==20231228
+
+# Web scraping (MCA scraper)
+requests==2.31.0

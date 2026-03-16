@@ -38,6 +38,12 @@ ENV/
 examples/*.pdf
 examples/*.html
 
+# Scraped data (large, not committed)
+data/
+
+# Scraper logs
+scrape_mca.log
+
 # OS
 .DS_Store
 Thumbs.db
